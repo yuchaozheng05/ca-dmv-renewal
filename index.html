@@ -538,6 +538,83 @@
       .row { flex-direction: column; gap: 0; }
       .trust-badges { gap: 12px; }
     }
+
+    /* ── Info Sections (below main card) ───────────────── */
+    .info-section {
+      max-width: 800px;
+      margin: 0 auto 44px;
+      padding: 0 16px;
+    }
+
+    .info-section > h2 {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--blue);
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .how-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .how-step {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 28px 20px;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+
+    .how-icon { font-size: 40px; margin-bottom: 12px; }
+    .how-step h3 { font-size: 15px; font-weight: 700; color: var(--blue); margin-bottom: 8px; }
+    .how-step p  { font-size: 13px; color: var(--gray); line-height: 1.55; }
+
+    .info-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 28px 32px;
+    }
+
+    .info-intro { color: var(--gray); font-size: 14px; margin-bottom: 20px; line-height: 1.6; }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .info-item { padding: 16px; background: var(--blue-lt); border-radius: 8px; }
+    .info-item h4 { font-size: 13px; font-weight: 700; color: var(--blue); margin-bottom: 6px; }
+    .info-item p  { font-size: 13px; color: var(--gray); line-height: 1.5; }
+
+    .pno-banner {
+      background: #e8f4ff;
+      border: 1px solid #a0c8f0;
+      border-radius: 8px;
+      padding: 14px 18px;
+      font-size: 13.5px;
+      color: #1a3a7a;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      line-height: 1.6;
+    }
+
+    .faq-item { border-bottom: 1px solid #eef0f6; padding: 16px 0; }
+    .faq-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .faq-q { font-size: 15px; font-weight: 700; color: var(--blue); margin-bottom: 6px; }
+    .faq-a { font-size: 14px; color: var(--gray); line-height: 1.55; }
+
+    @media (max-width: 600px) {
+      .how-grid  { grid-template-columns: 1fr; }
+      .info-grid { grid-template-columns: 1fr; }
+      .info-card { padding: 20px; }
+    }
   </style>
 </head>
 <body>
@@ -757,6 +834,118 @@
   </div><!-- /card -->
 </div><!-- /container -->
 
+<!-- ═══════════════════ HOW IT WORKS ══════════════════ -->
+<div class="info-section" style="margin-top:44px">
+  <h2 data-i18n="hiw_title">How It Works</h2>
+  <div class="how-grid">
+    <div class="how-step">
+      <div class="how-icon">🚗</div>
+      <h3 data-i18n="hiw1_title">Enter Vehicle Info</h3>
+      <p data-i18n="hiw1_desc">Enter your license plate and last 5 digits of your VIN. We instantly look up your renewal fees directly from the CA DMV.</p>
+    </div>
+    <div class="how-step">
+      <div class="how-icon">💳</div>
+      <h3 data-i18n="hiw2_title">Pay Securely Online</h3>
+      <p data-i18n="hiw2_desc">Pay registration fees plus a small service fee with any major credit card. Payments are encrypted and processed by Stripe.</p>
+    </div>
+    <div class="how-step">
+      <div class="how-icon">✅</div>
+      <h3 data-i18n="hiw3_title">Get Your Sticker</h3>
+      <p data-i18n="hiw3_desc">Receive your digital confirmation immediately. Your new registration sticker will be mailed to your DMV address within 7–10 business days.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ FEE BREAKDOWN ═════════════════ -->
+<div class="info-section">
+  <h2 data-i18n="fees_title">Understanding Your Registration Fees</h2>
+  <div class="info-card">
+    <p class="info-intro" data-i18n="fees_intro">California vehicle registration fees are based on your vehicle's value, type, county, and renewal status. Here's what each fee covers:</p>
+    <div class="info-grid">
+      <div class="info-item">
+        <h4>🚗 <span data-i18n="fees_reg_title">Registration Fee</span></h4>
+        <p data-i18n="fees_reg_desc">The base fee to register your vehicle with the CA DMV. Amount varies by vehicle type and weight class.</p>
+      </div>
+      <div class="info-item">
+        <h4>🏷️ <span data-i18n="fees_vlf_title">Vehicle License Fee (VLF)</span></h4>
+        <p data-i18n="fees_vlf_desc">Charged at 0.65% of your vehicle's market value. You may be eligible for a state income tax deduction on this fee.</p>
+      </div>
+      <div class="info-item">
+        <h4>🏛️ <span data-i18n="fees_county_title">County / District Fees</span></h4>
+        <p data-i18n="fees_county_desc">Local fees set by your county for special programs, transportation improvements, and local services.</p>
+      </div>
+      <div class="info-item">
+        <h4>💨 <span data-i18n="fees_smog_title">Smog Abatement Fee</span></h4>
+        <p data-i18n="fees_smog_desc">A state fee that funds clean air programs. Most vehicles older than 4 years require a smog inspection every 2 years.</p>
+      </div>
+      <div class="info-item">
+        <h4>⚠️ <span data-i18n="fees_late_title">Delinquency Fees</span></h4>
+        <p data-i18n="fees_late_desc">Late renewal fees apply after your expiration date. Renewing on time avoids penalties of 60%–80% of your base fee.</p>
+      </div>
+      <div class="info-item">
+        <h4>🔧 <span data-i18n="fees_service_title">Service Fee</span></h4>
+        <p data-i18n="fees_service_desc">Our processing fee for this online convenience service. All DMV fees are passed through at cost with no markup.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ IMPORTANT INFO ════════════════ -->
+<div class="info-section">
+  <h2 data-i18n="important_title">Important Information</h2>
+  <div class="info-card">
+    <div class="pno-banner">
+      <span style="font-size:20px;flex-shrink:0">📋</span>
+      <div><strong data-i18n="pno_title">Planned Non-Operation (PNO):</strong> <span data-i18n="pno_desc">The DMV will accept a PNO filing up to 60 days before your registration expires, or up to 90 days after it expires. If your vehicle will not be operated on public roads, filing a PNO avoids full registration fees.</span></div>
+    </div>
+    <div class="info-grid">
+      <div class="info-item">
+        <h4>⏰ <span data-i18n="grace_title">Grace Period</span></h4>
+        <p data-i18n="grace_desc">California provides a renewal window before and after your expiration date, but late fees apply once expired. Renew before your due date to save money.</p>
+      </div>
+      <div class="info-item">
+        <h4>📧 <span data-i18n="reminder_title">Renewal Reminders</span></h4>
+        <p data-i18n="reminder_desc">Enter your email when renewing and we'll automatically remind you before next year's expiration — so you'll never miss a deadline.</p>
+      </div>
+      <div class="info-item">
+        <h4>💨 <span data-i18n="smog_check_title">Smog Inspections</span></h4>
+        <p data-i18n="smog_check_desc">Vehicles older than 4 years in most California counties require a biennial smog check. Your vehicle must pass before registration can be renewed.</p>
+      </div>
+      <div class="info-item">
+        <h4>🔖 <span data-i18n="lost_tags_title">Lost or Stolen Stickers</span></h4>
+        <p data-i18n="lost_tags_desc">If your registration sticker or certificate is lost or stolen, file CA DMV Form REG 56 (Application for Replacement Plates, Stickers, Documents) or contact us.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ FAQ ════════════════════════════ -->
+<div class="info-section" style="margin-bottom:56px">
+  <h2 data-i18n="faq_title">Frequently Asked Questions</h2>
+  <div class="info-card">
+    <div class="faq-item">
+      <div class="faq-q" data-i18n="faq1_q">What do I need to renew my registration online?</div>
+      <div class="faq-a" data-i18n="faq1_a">You need your license plate number, the last 5 digits of your VIN (found on your dashboard, door jamb, or registration card), your county, and a valid credit card.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" data-i18n="faq2_q">When will I receive my registration sticker?</div>
+      <div class="faq-a" data-i18n="faq2_a">You'll receive a digital confirmation immediately after payment. Your physical sticker and card will be mailed to your DMV address on file within 7–10 business days.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" data-i18n="faq3_q">Can I renew if my registration is already expired?</div>
+      <div class="faq-a" data-i18n="faq3_a">Yes. You can renew after expiration, but late fees will be added. We recommend renewing as soon as possible to minimize penalties.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" data-i18n="faq4_q">Do I need a smog check before renewing?</div>
+      <div class="faq-a" data-i18n="faq4_a">If required for your vehicle, a smog check must be completed before renewal. Your DMV renewal notice will indicate if one is needed.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" data-i18n="faq5_q">Is my payment and personal information secure?</div>
+      <div class="faq-a" data-i18n="faq5_a">Yes. Payments are processed by Stripe (PCI-DSS Level 1 certified). We never store your card details. All data is protected with 256-bit SSL encryption.</div>
+    </div>
+  </div>
+</div>
+
 <!-- ══════════════════════ FOOTER ══════════════════════ -->
 <footer>
   <p data-i18n="footer_disclaimer">This service is operated by an authorized California DMV Business Partner. We are not affiliated with the California Department of Motor Vehicles.</p>
@@ -846,6 +1035,49 @@ const LANG = {
     confirm_paid: 'Amount Paid',
     confirm_expiry: 'New Expiry',
     confirm_ref: 'Reference #',
+    hiw_title: 'How It Works',
+    hiw1_title: 'Enter Vehicle Info',
+    hiw1_desc: 'Enter your license plate and last 5 digits of your VIN. We instantly look up your renewal fees directly from the CA DMV.',
+    hiw2_title: 'Pay Securely Online',
+    hiw2_desc: 'Pay registration fees plus a small service fee with any major credit card. Payments are encrypted and processed by Stripe.',
+    hiw3_title: 'Get Your Sticker',
+    hiw3_desc: 'Receive your digital confirmation immediately. Your new registration sticker will be mailed to your DMV address within 7–10 business days.',
+    fees_title: 'Understanding Your Registration Fees',
+    fees_intro: "California vehicle registration fees are based on your vehicle's value, type, county, and renewal status. Here's what each fee covers:",
+    fees_reg_title: 'Registration Fee',
+    fees_reg_desc: 'The base fee to register your vehicle with the CA DMV. Amount varies by vehicle type and weight class.',
+    fees_vlf_title: 'Vehicle License Fee (VLF)',
+    fees_vlf_desc: "Charged at 0.65% of your vehicle's market value. You may be eligible for a state income tax deduction on this fee.",
+    fees_county_title: 'County / District Fees',
+    fees_county_desc: 'Local fees set by your county for special programs, transportation improvements, and local services.',
+    fees_smog_title: 'Smog Abatement Fee',
+    fees_smog_desc: 'A state fee that funds clean air programs. Most vehicles older than 4 years require a smog inspection every 2 years.',
+    fees_late_title: 'Delinquency Fees',
+    fees_late_desc: 'Late renewal fees apply after your expiration date. Renewing on time avoids penalties of 60%–80% of your base fee.',
+    fees_service_title: 'Service Fee',
+    fees_service_desc: 'Our processing fee for this online convenience service. All DMV fees are passed through at cost with no markup.',
+    important_title: 'Important Information',
+    pno_title: 'Planned Non-Operation (PNO):',
+    pno_desc: 'The DMV will accept a PNO filing up to 60 days before your registration expires, or up to 90 days after it expires. If your vehicle will not be operated on public roads, filing a PNO avoids full registration fees.',
+    grace_title: 'Grace Period',
+    grace_desc: 'California provides a renewal window before and after your expiration date, but late fees apply once expired. Renew before your due date to save money.',
+    reminder_title: 'Renewal Reminders',
+    reminder_desc: "Enter your email when renewing and we'll automatically remind you before next year's expiration — so you'll never miss a deadline.",
+    smog_check_title: 'Smog Inspections',
+    smog_check_desc: 'Vehicles older than 4 years in most California counties require a biennial smog check. Your vehicle must pass before registration can be renewed.',
+    lost_tags_title: 'Lost or Stolen Stickers',
+    lost_tags_desc: 'If your registration sticker or certificate is lost or stolen, file CA DMV Form REG 56 or contact us for assistance.',
+    faq_title: 'Frequently Asked Questions',
+    faq1_q: 'What do I need to renew my registration online?',
+    faq1_a: 'You need your license plate number, the last 5 digits of your VIN (found on your dashboard, door jamb, or registration card), your county, and a valid credit card.',
+    faq2_q: 'When will I receive my registration sticker?',
+    faq2_a: "You'll receive a digital confirmation immediately after payment. Your physical sticker and card will be mailed to your DMV address on file within 7–10 business days.",
+    faq3_q: 'Can I renew if my registration is already expired?',
+    faq3_a: 'Yes. You can renew after expiration, but late fees will be added. We recommend renewing as soon as possible to minimize penalties.',
+    faq4_q: 'Do I need a smog check before renewing?',
+    faq4_a: 'If required for your vehicle, a smog check must be completed before renewal. Your DMV renewal notice will indicate if one is needed.',
+    faq5_q: 'Is my payment and personal information secure?',
+    faq5_a: 'Yes. Payments are processed by Stripe (PCI-DSS Level 1 certified). We never store your card details. All data is protected with 256-bit SSL encryption.',
   },
   es: {
     brand_name: 'Renovación de Placas CA',
@@ -903,6 +1135,49 @@ const LANG = {
     confirm_paid: 'Monto Pagado',
     confirm_expiry: 'Nueva Vigencia',
     confirm_ref: 'Referencia #',
+    hiw_title: 'Cómo Funciona',
+    hiw1_title: 'Ingrese los Datos del Vehículo',
+    hiw1_desc: 'Ingrese su número de placa y los últimos 5 dígitos del VIN. Consultamos sus tarifas directamente en el DMV de California.',
+    hiw2_title: 'Pague de Forma Segura',
+    hiw2_desc: 'Pague las tarifas de registro más una pequeña tarifa de servicio con cualquier tarjeta de crédito. Los pagos son procesados por Stripe.',
+    hiw3_title: 'Reciba su Calcomanía',
+    hiw3_desc: 'Reciba una confirmación digital de inmediato. Su nueva calcomanía será enviada por correo a su dirección en el DMV en 7–10 días hábiles.',
+    fees_title: 'Entendiendo sus Tarifas de Registro',
+    fees_intro: 'Las tarifas de registro de California se basan en el valor, tipo, condado y estado de renovación de su vehículo. Esto es lo que incluye cada tarifa:',
+    fees_reg_title: 'Tarifa de Registro',
+    fees_reg_desc: 'La tarifa base para registrar su vehículo en el DMV de CA. El monto varía según el tipo y peso del vehículo.',
+    fees_vlf_title: 'Tarifa de Licencia Vehicular (VLF)',
+    fees_vlf_desc: 'Se cobra al 0.65% del valor de mercado de su vehículo. Puede ser elegible para una deducción de impuestos estatales.',
+    fees_county_title: 'Tarifas del Condado / Distrito',
+    fees_county_desc: 'Tarifas locales establecidas por su condado para programas especiales, mejoras de transporte y servicios locales.',
+    fees_smog_title: 'Tarifa de Reducción de Smog',
+    fees_smog_desc: 'Una tarifa estatal que financia programas de aire limpio. La mayoría de vehículos mayores de 4 años requieren inspección de smog cada 2 años.',
+    fees_late_title: 'Cargos por Morosidad',
+    fees_late_desc: 'Se aplican cargos por renovación tardía después de su fecha de vencimiento. Renovar a tiempo evita penalizaciones del 60%–80% de su tarifa base.',
+    fees_service_title: 'Tarifa de Servicio',
+    fees_service_desc: 'Nuestra tarifa de procesamiento por este servicio en línea. Todas las tarifas del DMV se trasladan al costo sin recargo adicional.',
+    important_title: 'Información Importante',
+    pno_title: 'No-Operación Planeada (PNO):',
+    pno_desc: 'El DMV aceptará una declaración de PNO hasta 60 días antes de que venza su registro, o hasta 90 días después. Si su vehículo no será operado en vías públicas, el PNO evita pagar tarifas completas.',
+    grace_title: 'Período de Gracia',
+    grace_desc: 'California ofrece una ventana de renovación antes y después de su fecha de vencimiento, pero se aplican cargos por mora una vez vencido. Renueve antes de la fecha límite.',
+    reminder_title: 'Recordatorios de Renovación',
+    reminder_desc: 'Ingrese su correo al renovar y le recordaremos automáticamente antes del vencimiento del próximo año, para que nunca pierda el plazo.',
+    smog_check_title: 'Inspecciones de Smog',
+    smog_check_desc: 'Los vehículos mayores de 4 años en la mayoría de los condados de California requieren una inspección de smog cada 2 años. Su vehículo debe aprobarla antes de renovar.',
+    lost_tags_title: 'Calcomanías Perdidas o Robadas',
+    lost_tags_desc: 'Si su calcomanía o certificado de registro se pierde o es robado, complete el Formulario REG 56 del DMV de CA o contáctenos para asistencia.',
+    faq_title: 'Preguntas Frecuentes',
+    faq1_q: '¿Qué necesito para renovar mi registro en línea?',
+    faq1_a: 'Necesita su número de placa, los últimos 5 dígitos del VIN (en su tablero, jamba de puerta o tarjeta de registro), su condado y una tarjeta de crédito válida.',
+    faq2_q: '¿Cuándo recibiré mi calcomanía de registro?',
+    faq2_a: 'Recibirá una confirmación digital inmediatamente después del pago. La calcomanía y tarjeta física serán enviadas a su dirección en el DMV en 7–10 días hábiles.',
+    faq3_q: '¿Puedo renovar si mi registro ya venció?',
+    faq3_a: 'Sí. Puede renovar después del vencimiento, pero se agregarán cargos por mora. Recomendamos renovar lo antes posible para minimizar penalizaciones.',
+    faq4_q: '¿Necesito una inspección de smog antes de renovar?',
+    faq4_a: 'Si se requiere para su vehículo, debe completar la inspección de smog antes de la renovación. Su aviso de renovación del DMV indicará si es necesaria.',
+    faq5_q: '¿Es segura mi información de pago y personal?',
+    faq5_a: 'Sí. Los pagos son procesados por Stripe (certificado PCI-DSS Nivel 1). Nunca almacenamos los datos de su tarjeta. Todo está protegido con cifrado SSL de 256 bits.',
   },
   zh: {
     brand_name: '加州车牌更新',
@@ -960,6 +1235,49 @@ const LANG = {
     confirm_paid: '已付金额',
     confirm_expiry: '新到期日',
     confirm_ref: '参考编号 #',
+    hiw_title: '操作流程',
+    hiw1_title: '输入车辆信息',
+    hiw1_desc: '输入您的车牌号和VIN后5位，我们将直接从加州DMV查询您的续期费用。',
+    hiw2_title: '安全在线付款',
+    hiw2_desc: '使用任何主流信用卡支付登记费用及少量服务费，付款通过Stripe加密处理。',
+    hiw3_title: '收取贴纸',
+    hiw3_desc: '付款后立即收到数字确认。新的登记贴纸将在7-10个工作日内邮寄到您在DMV登记的地址。',
+    fees_title: '了解您的登记费用',
+    fees_intro: '加州车辆登记费用根据车辆价值、类型、所在县及续期状态计算。以下是各项费用的说明：',
+    fees_reg_title: '登记费',
+    fees_reg_desc: '向加州DMV登记车辆的基本费用，金额因车辆类型和重量级别而异。',
+    fees_vlf_title: '车辆许可费（VLF）',
+    fees_vlf_desc: '按车辆市场价值的0.65%收取。您可能有资格获得州所得税扣除。',
+    fees_county_title: '县/地区费用',
+    fees_county_desc: '由您所在县设定的地方费用，用于特殊项目、交通改善和地方服务。',
+    fees_smog_title: '排放减免费',
+    fees_smog_desc: '资助清洁空气项目的州费用。大多数车龄超过4年的车辆每2年需要一次尾气检测。',
+    fees_late_title: '滞纳金',
+    fees_late_desc: '到期后续期将产生滞纳金，最高可达基本费用的60%-80%。请及时续期以避免罚款。',
+    fees_service_title: '服务费',
+    fees_service_desc: '我们的在线便捷服务处理费。所有DMV费用按实际成本传递，不额外加价。',
+    important_title: '重要信息',
+    pno_title: '计划停用申报（PNO）：',
+    pno_desc: 'DMV可接受在登记到期前60天内或到期后90天内提交的PNO申报。若您的车辆不会在公共道路上行驶，提交PNO可避免缴纳全额登记费。',
+    grace_title: '宽限期',
+    grace_desc: '加州在到期日前后均提供续期窗口，但登记到期后续期会产生滞纳金。请在到期日前续期以节省费用。',
+    reminder_title: '续期提醒',
+    reminder_desc: '续期时输入您的电子邮件，我们将在明年到期前自动提醒您，确保您不会错过截止日期。',
+    smog_check_title: '尾气检测',
+    smog_check_desc: '加州大多数县的车龄超过4年的车辆每两年需要进行一次尾气检测。续期前您的车辆必须通过检测。',
+    lost_tags_title: '丢失或被盗贴纸',
+    lost_tags_desc: '若您的登记贴纸或证书丢失或被盗，请填写加州DMV REG 56表格或联系我们寻求协助。',
+    faq_title: '常见问题',
+    faq1_q: '在线续期需要哪些信息？',
+    faq1_a: '您需要提供车牌号、VIN后5位（可在仪表板、车门框或登记证上找到）、所在县及有效信用卡。',
+    faq2_q: '何时能收到登记贴纸？',
+    faq2_a: '付款后立即收到数字确认。实体贴纸和登记证将在7-10个工作日内邮寄到您在DMV登记的地址。',
+    faq3_q: '登记已到期还能续期吗？',
+    faq3_a: '可以。到期后仍可续期，但会产生滞纳金。建议尽快续期以减少罚款。',
+    faq4_q: '续期前需要通过尾气检测吗？',
+    faq4_a: '如果您的车辆需要尾气检测，必须先完成检测才能续期。您的DMV续期通知会说明是否需要检测。',
+    faq5_q: '我的付款和个人信息安全吗？',
+    faq5_a: '是的。付款通过Stripe（PCI-DSS一级认证）处理，我们不存储您的卡片信息，所有数据均受256位SSL加密保护。',
   }
 };
 
