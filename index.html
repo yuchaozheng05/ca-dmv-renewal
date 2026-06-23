@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CA Vehicle Registration Renewal</title>
+
+  <!-- Stripe.js -->
+  <script src="https://js.stripe.com/v3/"></script>
+
+  <style>
+    /* ── Reset & Variables ─────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue:    #1a4fa0;
+      --blue-dk: #163d80;
+      --blue-lt: #e8f0fb;
+      --gold:    #f5a623;
+      --green:   #1a9e5c;
+      --red:     #d0021b;
+      --gray:    #5a6473;
+      --bg:      #f4f6fb;
+      --white:   #ffffff;
+      --radius:  10px;
+      --shadow:  0 4px 24px rgba(0,0,0,.10);
+      --font:    'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: #1c2333;
+      min-height: 100vh;
+    }
+
+    /* ── Header ────────────────────────────────────────── */
+    header {
+      background: var(--blue);
+      color: var(--white);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.18);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--white);
+    }
+
+    .logo-icon {
+      width: 38px; height: 38px;
+      background: var(--gold);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 18px; color: var(--blue-dk);
+    }
+
+    .logo-text { font-size: 17px; font-weight: 700; line-height: 1.2; }
+    .logo-sub  { font-size: 11px; font-weight: 400; opacity: .8; }
+
+    /* Language switcher */
+    .lang-switcher {
+      display: flex;
+      gap: 4px;
+    }
+
+    .lang-btn {
+      background: rgba(255,255,255,.15);
+      border: 1px solid rgba(255,255,255,.3);
+      color: var(--white);
+      padding: 5px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: background .2s, border-color .2s;
+    }
+
+    .lang-btn:hover    { background: rgba(255,255,255,.28); }
+    .lang-btn.active   { background: var(--gold); border-color: var(--gold); color: var(--blue-dk); }
+
+    /* ── Hero ──────────────────────────────────────────── */
+    .hero {
+      background: linear-gradient(135deg, var(--blue-dk) 0%, var(--blue) 60%, #2563c7 100%);
+      color: var(--white);
+      text-align: center;
+      padding: 56px 24px 64px;
+    }
+
+    .hero h1 { font-size: clamp(24px, 5vw, 38px); font-weight: 800; margin-bottom: 10px; }
+    .hero p  { font-size: 16px; opacity: .88; max-width: 560px; margin: 0 auto 28px; }
+
+    .trust-badges {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      opacity: .92;
+      background: rgba(255,255,255,.12);
+      padding: 6px 14px;
+      border-radius: 20px;
+    }
+
+    .badge-icon { font-size: 15px; }
+
+    /* ── Main card ─────────────────────────────────────── */
+    .container {
+      max-width: 680px;
+      margin: -32px auto 48px;
+      padding: 0 16px;
+    }
+
+    .card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .card-header {
+      background: var(--blue-lt);
+      border-bottom: 1px solid #d0daf0;
+      padding: 18px 28px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-header h2 { font-size: 17px; font-weight: 700; color: var(--blue); }
+    .step-badge {
+      background: var(--blue);
+      color: var(--white);
+      border-radius: 50%;
+      width: 26px; height: 26px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .card-body { padding: 28px; }
+
+    /* ── Form ──────────────────────────────────────────── */
+    .form-group { margin-bottom: 20px; }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    select {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1.5px solid #d0d8e8;
+      border-radius: var(--radius);
+      font-size: 16px;
+      color: #1c2333;
+      transition: border-color .2s, box-shadow .2s;
+      background: #fafbfd;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(26,79,160,.12);
+      background: var(--white);
+    }
+
+    input::placeholder { color: #b0bad0; }
+
+    .hint {
+      font-size: 12px;
+      color: var(--gray);
+      margin-top: 5px;
+    }
+
+    .row { display: flex; gap: 16px; }
+    .row .form-group { flex: 1; }
+
+    /* ── Buttons ───────────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 28px;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .15s, box-shadow .15s, opacity .2s;
+      text-decoration: none;
+    }
+
+    .btn:hover  { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(0,0,0,.15); }
+    .btn:active { transform: translateY(0); }
+
+    .btn-primary {
+      background: var(--blue);
+      color: var(--white);
+      width: 100%;
+    }
+
+    .btn-primary:hover { background: var(--blue-dk); }
+
+    .btn-success {
+      background: var(--green);
+      color: var(--white);
+      width: 100%;
+    }
+
+    .btn-outline {
+      background: var(--white);
+      color: var(--blue);
+      border: 2px solid var(--blue);
+    }
+
+    .btn-sm { padding: 8px 16px; font-size: 14px; }
+
+    /* Spinner inside button */
+    .btn .spinner {
+      width: 18px; height: 18px;
+      border: 2.5px solid rgba(255,255,255,.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Sections (shown/hidden) ───────────────────────── */
+    .section { display: none; }
+    .section.active { display: block; }
+
+    /* ── Fee Breakdown ─────────────────────────────────── */
+    .vehicle-info {
+      background: var(--blue-lt);
+      border: 1px solid #c8d8f0;
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .vehicle-icon { font-size: 32px; }
+
+    .vehicle-detail h3 { font-size: 17px; font-weight: 700; color: var(--blue); }
+    .vehicle-detail p  { font-size: 13px; color: var(--gray); margin-top: 2px; }
+
+    .fee-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+
+    .fee-table tr td {
+      padding: 11px 0;
+      font-size: 15px;
+      border-bottom: 1px solid #eef0f6;
+    }
+
+    .fee-table tr:last-of-type td { border-bottom: none; }
+    .fee-table td:last-child { text-align: right; font-weight: 600; }
+
+    .fee-table .total-row td {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--blue);
+      border-top: 2px solid var(--blue-lt);
+      padding-top: 14px;
+    }
+
+    .due-date-banner {
+      background: #fff8e6;
+      border: 1px solid #f5c060;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 14px;
+      color: #7a4f00;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ── Payment ───────────────────────────────────────── */
+    #card-element {
+      padding: 14px 16px;
+      border: 1.5px solid #d0d8e8;
+      border-radius: var(--radius);
+      background: #fafbfd;
+      margin-bottom: 16px;
+    }
+
+    #card-errors {
+      color: var(--red);
+      font-size: 13px;
+      margin-bottom: 12px;
+      min-height: 18px;
+    }
+
+    .payment-icons {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .pay-icon {
+      background: var(--white);
+      border: 1px solid #d0d8e8;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--gray);
+    }
+
+    .secure-note {
+      text-align: center;
+      font-size: 12px;
+      color: var(--gray);
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    /* ── Confirmation ──────────────────────────────────── */
+    .success-check {
+      width: 72px; height: 72px;
+      background: var(--green);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 34px;
+      margin: 0 auto 20px;
+      box-shadow: 0 4px 16px rgba(26,158,92,.3);
+    }
+
+    .confirm-center { text-align: center; }
+    .confirm-center h2 { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+    .confirm-center p  { color: var(--gray); margin-bottom: 24px; }
+
+    .confirm-details {
+      background: var(--blue-lt);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin: 20px 0;
+      text-align: left;
+    }
+
+    .confirm-details .row-detail {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      padding: 6px 0;
+      border-bottom: 1px solid #d0daf0;
+    }
+    .confirm-details .row-detail:last-child { border-bottom: none; }
+    .confirm-details .row-detail span:last-child { font-weight: 700; }
+
+    /* ── Messaging Share ───────────────────────────────── */
+    .messaging-section {
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px solid #eef0f6;
+    }
+
+    .messaging-section h3 { font-size: 15px; font-weight: 700; margin-bottom: 14px; color: var(--gray); text-transform: uppercase; letter-spacing: .04em; }
+
+    .msg-buttons {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn-wechat {
+      background: #07c160;
+      color: #fff;
+      flex: 1;
+      min-width: 140px;
+    }
+
+    .btn-messenger {
+      background: #0084ff;
+      color: #fff;
+      flex: 1;
+      min-width: 140px;
+    }
+
+    /* ── Info steps ────────────────────────────────────── */
+    .steps-bar {
+      display: flex;
+      justify-content: center;
+      gap: 0;
+      margin-bottom: 0;
+      padding: 16px 28px;
+      background: var(--white);
+      border-bottom: 1px solid #eef0f6;
+    }
+
+    .step-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+      position: relative;
+    }
+
+    .step-item::after {
+      content: '';
+      position: absolute;
+      top: 14px;
+      right: -50%;
+      width: 100%;
+      height: 2px;
+      background: #d0d8e8;
+      z-index: 0;
+    }
+
+    .step-item:last-child::after { display: none; }
+
+    .step-num {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: #d0d8e8;
+      color: var(--gray);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700;
+      position: relative; z-index: 1;
+      transition: background .3s, color .3s;
+    }
+
+    .step-item.done   .step-num { background: var(--green); color: var(--white); }
+    .step-item.active .step-num { background: var(--blue);  color: var(--white); }
+
+    .step-label { font-size: 11px; color: var(--gray); margin-top: 4px; font-weight: 600; text-align: center; }
+    .step-item.active .step-label { color: var(--blue); }
+
+    /* ── Alert ─────────────────────────────────────────── */
+    .alert {
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+    .alert-error {
+      background: #ffeaea;
+      border: 1px solid #f5a0a0;
+      color: var(--red);
+    }
+
+    /* ── Footer ────────────────────────────────────────── */
+    footer {
+      text-align: center;
+      padding: 20px 24px;
+      font-size: 12px;
+      color: var(--gray);
+      background: #e8ecf5;
+      border-top: 1px solid #d0d8e8;
+    }
+
+    footer a { color: var(--blue); text-decoration: none; }
+
+    /* ── WeChat popup ──────────────────────────────────── */
+    .overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.55);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    .overlay.open { display: flex; }
+
+    .modal {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 32px;
+      max-width: 360px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 12px 40px rgba(0,0,0,.22);
+    }
+
+    .modal h3 { font-size: 18px; margin-bottom: 8px; }
+    .modal p  { font-size: 14px; color: var(--gray); margin-bottom: 20px; }
+
+    .qr-placeholder {
+      width: 160px; height: 160px;
+      background: #f0f0f0;
+      border: 2px dashed #ccc;
+      border-radius: 8px;
+      margin: 0 auto 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; color: #999;
+    }
+
+    .modal .btn-close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 22px;
+      color: var(--gray);
+      position: absolute;
+      top: 16px; right: 16px;
+    }
+
+    .modal { position: relative; }
+
+    @media (max-width: 480px) {
+      .hero { padding: 40px 16px 52px; }
+      .card-body { padding: 20px; }
+      .row { flex-direction: column; gap: 0; }
+      .trust-badges { gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════ HEADER ══════════════════════ -->
+<header>
+  <a class="logo" href="#">
+    <div class="logo-icon">CA</div>
+    <div>
+      <div class="logo-text" data-i18n="brand_name">CA Reg Renewal</div>
+      <div class="logo-sub" data-i18n="brand_sub">Authorized DMV Partner</div>
+    </div>
+  </a>
+  <div class="lang-switcher">
+    <button class="lang-btn active" onclick="setLang('en')">EN</button>
+    <button class="lang-btn"        onclick="setLang('es')">ES</button>
+    <button class="lang-btn"        onclick="setLang('zh')">中文</button>
+  </div>
+</header>
+
+<!-- ══════════════════════ HERO ════════════════════════ -->
+<div class="hero">
+  <h1 data-i18n="hero_title">Renew Your California Vehicle Registration Online</h1>
+  <p  data-i18n="hero_sub">Fast, secure, and official. No DMV lines required.</p>
+  <div class="trust-badges">
+    <span class="badge"><span class="badge-icon">🏛️</span> <span data-i18n="badge_official">DMV Authorized Partner</span></span>
+    <span class="badge"><span class="badge-icon">🔒</span> <span data-i18n="badge_secure">256-bit SSL Secure</span></span>
+    <span class="badge"><span class="badge-icon">⚡</span> <span data-i18n="badge_instant">Instant Fee Lookup</span></span>
+  </div>
+</div>
+
+<!-- ══════════════════════ MAIN ═════════════════════════ -->
+<div class="container">
+  <div class="card">
+
+    <!-- Progress steps -->
+    <div class="steps-bar">
+      <div class="step-item active" id="step1-indicator">
+        <div class="step-num">1</div>
+        <div class="step-label" data-i18n="step1">Vehicle</div>
+      </div>
+      <div class="step-item" id="step2-indicator">
+        <div class="step-num">2</div>
+        <div class="step-label" data-i18n="step2">Fees</div>
+      </div>
+      <div class="step-item" id="step3-indicator">
+        <div class="step-num">3</div>
+        <div class="step-label" data-i18n="step3">Payment</div>
+      </div>
+      <div class="step-item" id="step4-indicator">
+        <div class="step-num">4</div>
+        <div class="step-label" data-i18n="step4">Done</div>
+      </div>
+    </div>
+
+    <!-- ── STEP 1 : Vehicle Info ────────────────────── -->
+    <div class="section active" id="step1">
+      <div class="card-header">
+        <div class="step-badge">1</div>
+        <h2 data-i18n="s1_title">Enter Vehicle Information</h2>
+      </div>
+      <div class="card-body">
+        <div id="lookup-error" class="alert alert-error" style="display:none;"></div>
+
+        <div class="row">
+          <div class="form-group">
+            <label for="plate" data-i18n="label_plate">License Plate</label>
+            <input type="text" id="plate" placeholder="e.g. 7ABC123" autocomplete="off" style="text-transform:uppercase" />
+          </div>
+          <div class="form-group">
+            <label for="vin5" data-i18n="label_vin">Last 5 of VIN</label>
+            <input type="text" id="vin5" placeholder="e.g. A1234" maxlength="5" autocomplete="off" style="text-transform:uppercase" />
+            <div class="hint" data-i18n="hint_vin">Found on your registration card or dashboard</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="county" data-i18n="label_county">County</label>
+          <select id="county">
+            <option value="" data-i18n="select_county">-- Select County --</option>
+            <option>Alameda</option><option>Alpine</option><option>Amador</option>
+            <option>Butte</option><option>Calaveras</option><option>Colusa</option>
+            <option>Contra Costa</option><option>Del Norte</option><option>El Dorado</option>
+            <option>Fresno</option><option>Glenn</option><option>Humboldt</option>
+            <option>Imperial</option><option>Inyo</option><option>Kern</option>
+            <option>Kings</option><option>Lake</option><option>Lassen</option>
+            <option>Los Angeles</option><option>Madera</option><option>Marin</option>
+            <option>Mariposa</option><option>Mendocino</option><option>Merced</option>
+            <option>Modoc</option><option>Mono</option><option>Monterey</option>
+            <option>Napa</option><option>Nevada</option><option>Orange</option>
+            <option>Placer</option><option>Plumas</option><option>Riverside</option>
+            <option>Sacramento</option><option>San Benito</option><option>San Bernardino</option>
+            <option>San Diego</option><option>San Francisco</option><option>San Joaquin</option>
+            <option>San Luis Obispo</option><option>San Mateo</option><option>Santa Barbara</option>
+            <option>Santa Clara</option><option>Santa Cruz</option><option>Shasta</option>
+            <option>Sierra</option><option>Siskiyou</option><option>Solano</option>
+            <option>Sonoma</option><option>Stanislaus</option><option>Sutter</option>
+            <option>Tehama</option><option>Trinity</option><option>Tulare</option>
+            <option>Tuolumne</option><option>Ventura</option><option>Yolo</option><option>Yuba</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="email" data-i18n="label_email">Email (for receipt)</label>
+          <input type="email" id="email" placeholder="your@email.com" autocomplete="email" />
+          <div class="hint" data-i18n="hint_email">We'll send your renewal confirmation and remind you next year</div>
+        </div>
+
+        <button class="btn btn-primary" id="lookup-btn" onclick="lookupVehicle()">
+          <span data-i18n="btn_lookup">🔍 Look Up My Registration Fees</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ── STEP 2 : Fee Breakdown ───────────────────── -->
+    <div class="section" id="step2">
+      <div class="card-header">
+        <div class="step-badge">2</div>
+        <h2 data-i18n="s2_title">Registration Fee Summary</h2>
+      </div>
+      <div class="card-body">
+        <div class="vehicle-info">
+          <div class="vehicle-icon">🚗</div>
+          <div class="vehicle-detail">
+            <h3 id="vehicle-name">—</h3>
+            <p id="vehicle-plate-display">—</p>
+          </div>
+        </div>
+
+        <div class="due-date-banner">
+          ⚠️ <span data-i18n="due_banner">Renewal due:</span> <strong id="due-date-display">—</strong>
+        </div>
+
+        <table class="fee-table" id="fee-table">
+          <!-- Rows injected by JS -->
+        </table>
+
+        <div class="row" style="gap:12px">
+          <button class="btn btn-outline btn-sm" onclick="goBack()" style="flex:0 0 auto;padding:12px 20px" data-i18n="btn_back">← Back</button>
+          <button class="btn btn-primary" onclick="goToPayment()" style="flex:1" data-i18n="btn_pay">Proceed to Payment →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── STEP 3 : Payment ─────────────────────────── -->
+    <div class="section" id="step3">
+      <div class="card-header">
+        <div class="step-badge">3</div>
+        <h2 data-i18n="s3_title">Secure Payment</h2>
+      </div>
+      <div class="card-body">
+        <div class="due-date-banner" style="background:#e8f0fb;border-color:#a0b8e0;color:#1a4fa0">
+          💳 <span data-i18n="pay_total">Total due:</span> <strong id="pay-total-display">—</strong>
+        </div>
+
+        <div class="payment-icons">
+          <span class="pay-icon">VISA</span>
+          <span class="pay-icon">MC</span>
+          <span class="pay-icon">AMEX</span>
+          <span class="pay-icon">DISCOVER</span>
+          <span class="pay-icon">WeChat Pay</span>
+        </div>
+
+        <div class="form-group">
+          <label data-i18n="label_card">Card Details</label>
+          <div id="card-element"></div>
+          <div id="card-errors" role="alert"></div>
+        </div>
+
+        <div id="pay-error" class="alert alert-error" style="display:none;"></div>
+
+        <button class="btn btn-success" id="pay-btn" onclick="submitPayment()">
+          <span id="pay-btn-text" data-i18n="btn_pay_now">🔒 Pay & Renew Now</span>
+        </button>
+
+        <div class="secure-note">
+          🔒 <span data-i18n="secure_note">Payments processed securely by Stripe. We never store your card details.</span>
+        </div>
+
+        <div style="margin-top:14px">
+          <button class="btn btn-outline btn-sm" onclick="goStep(2)" data-i18n="btn_back">← Back</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── STEP 4 : Confirmation ────────────────────── -->
+    <div class="section" id="step4">
+      <div class="card-body confirm-center">
+        <div class="success-check">✓</div>
+        <h2 data-i18n="confirm_title">Registration Renewed!</h2>
+        <p data-i18n="confirm_sub">Your renewal has been processed. A confirmation email is on its way.</p>
+
+        <div class="confirm-details" id="confirm-details">
+          <!-- Filled by JS -->
+        </div>
+
+        <div class="messaging-section">
+          <h3 data-i18n="share_title">Share or Get Notified via</h3>
+          <div class="msg-buttons">
+            <button class="btn btn-wechat" onclick="shareWeChat()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M9.5 7C6.46 7 4 9.24 4 12c0 1.5.68 2.85 1.76 3.8l-.56 1.7 1.85-.93A6.38 6.38 0 009.5 17c.34 0 .68-.03 1-.07A4.64 4.64 0 0110 16c0-2.76 2.69-5 6-5 .17 0 .34 0 .5.01C15.88 8.65 12.97 7 9.5 7zm-1.5 2.5a.75.75 0 110 1.5.75.75 0 010-1.5zm3 0a.75.75 0 110 1.5.75.75 0 010-1.5zM16 12c-2.21 0-4 1.57-4 3.5S13.79 19 16 19c.55 0 1.08-.1 1.56-.28l1.44.73-.44-1.33A3.44 3.44 0 0020 15.5C20 13.57 18.21 12 16 12zm-1 2a.5.5 0 110 1 .5.5 0 010-1zm2 0a.5.5 0 110 1 .5.5 0 010-1z"/></svg>
+              <span data-i18n="btn_wechat">Share via WeChat</span>
+            </button>
+            <button class="btn btn-messenger" onclick="shareMessenger()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.477 2 2 6.145 2 11.259c0 2.865 1.323 5.426 3.4 7.131V22l3.102-1.701a10.85 10.85 0 003.498.576c5.523 0 10-4.145 10-9.259C22 6.145 17.523 2 12 2zm1.07 12.482l-2.547-2.716-4.97 2.716 5.464-5.797 2.61 2.716 4.907-2.716-5.464 5.797z"/></svg>
+              <span data-i18n="btn_messenger">Share via Messenger</span>
+            </button>
+          </div>
+        </div>
+
+        <div style="margin-top:20px">
+          <button class="btn btn-outline" onclick="startOver()" data-i18n="btn_new">Renew Another Vehicle</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /card -->
+</div><!-- /container -->
+
+<!-- ══════════════════════ FOOTER ══════════════════════ -->
+<footer>
+  <p data-i18n="footer_disclaimer">This service is operated by an authorized California DMV Business Partner. We are not affiliated with the California Department of Motor Vehicles.</p>
+  <p style="margin-top:6px"><a href="#" data-i18n="footer_privacy">Privacy Policy</a> &nbsp;|&nbsp; <a href="#" data-i18n="footer_terms">Terms of Service</a> &nbsp;|&nbsp; <a href="#" data-i18n="footer_contact">Contact Us</a></p>
+</footer>
+
+<!-- ══════════════════════ WECHAT MODAL ════════════════ -->
+<div class="overlay" id="wechat-overlay" onclick="closeWeChat(event)">
+  <div class="modal">
+    <button class="btn-close" onclick="document.getElementById('wechat-overlay').classList.remove('open')">✕</button>
+    <div style="font-size:36px;margin-bottom:8px">💬</div>
+    <h3 data-i18n="wechat_modal_title">Share via WeChat</h3>
+    <p data-i18n="wechat_modal_sub">Scan the QR code with WeChat, or tap "Open WeChat" on mobile.</p>
+    <div class="qr-placeholder" id="wechat-qr">QR Code<br/>(replace with<br/>your WeChat ID)</div>
+    <button class="btn btn-wechat" onclick="openWeChatApp()" style="width:100%">
+      <span data-i18n="open_wechat">Open WeChat App</span>
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════════════ SCRIPT ═══════════════════════ -->
+<script>
+// ── Configuration ─────────────────────────────────────
+const CONFIG = {
+  stripePublicKey: 'pk_test_YOUR_STRIPE_PUBLIC_KEY',   // ← replace
+  apiBase:         '/api',                               // ← your backend URL
+  wechatOfficialAccount: 'YOUR_WECHAT_ID',              // ← replace
+  facebookAppId:   'YOUR_FB_APP_ID',                    // ← replace
+  serviceFee:      15.00,                               // your processing fee
+};
+
+// ── i18n Translations ─────────────────────────────────
+const LANG = {
+  en: {
+    brand_name: 'CA Reg Renewal',
+    brand_sub: 'Authorized DMV Partner',
+    hero_title: 'Renew Your California Vehicle Registration Online',
+    hero_sub: 'Fast, secure, and official. No DMV lines required.',
+    badge_official: 'DMV Authorized Partner',
+    badge_secure: '256-bit SSL Secure',
+    badge_instant: 'Instant Fee Lookup',
+    step1: 'Vehicle', step2: 'Fees', step3: 'Payment', step4: 'Done',
+    s1_title: 'Enter Vehicle Information',
+    label_plate: 'License Plate',
+    label_vin: 'Last 5 of VIN',
+    hint_vin: 'Found on your registration card or dashboard',
+    label_county: 'County',
+    select_county: '-- Select County --',
+    label_email: 'Email (for receipt)',
+    hint_email: "We'll send your renewal confirmation and remind you next year",
+    btn_lookup: '🔍 Look Up My Registration Fees',
+    s2_title: 'Registration Fee Summary',
+    due_banner: 'Renewal due:',
+    btn_back: '← Back',
+    btn_pay: 'Proceed to Payment →',
+    s3_title: 'Secure Payment',
+    pay_total: 'Total due:',
+    label_card: 'Card Details',
+    btn_pay_now: '🔒 Pay & Renew Now',
+    secure_note: 'Payments processed securely by Stripe. We never store your card details.',
+    confirm_title: 'Registration Renewed!',
+    confirm_sub: 'Your renewal has been processed. A confirmation email is on its way.',
+    share_title: 'Share or Get Notified via',
+    btn_wechat: 'Share via WeChat',
+    btn_messenger: 'Share via Messenger',
+    btn_new: 'Renew Another Vehicle',
+    wechat_modal_title: 'Share via WeChat',
+    wechat_modal_sub: 'Scan the QR code with WeChat, or tap "Open WeChat" on mobile.',
+    open_wechat: 'Open WeChat App',
+    footer_disclaimer: 'This service is operated by an authorized California DMV Business Partner. We are not affiliated with the California Department of Motor Vehicles.',
+    footer_privacy: 'Privacy Policy',
+    footer_terms: 'Terms of Service',
+    footer_contact: 'Contact Us',
+    err_plate: 'Please enter your license plate number.',
+    err_vin: 'Please enter the last 5 digits of your VIN.',
+    err_county: 'Please select your county.',
+    err_email: 'Please enter a valid email address.',
+    err_lookup: 'Unable to look up vehicle. Please check your plate and VIN and try again.',
+    fee_registration: 'Registration Fee',
+    fee_vlf: 'Vehicle License Fee (VLF)',
+    fee_county: 'County Fee',
+    fee_smog: 'Smog Abatement Fee',
+    fee_service: 'Service Fee',
+    fee_total: 'TOTAL DUE',
+    confirm_plate: 'License Plate',
+    confirm_vehicle: 'Vehicle',
+    confirm_paid: 'Amount Paid',
+    confirm_expiry: 'New Expiry',
+    confirm_ref: 'Reference #',
+  },
+  es: {
+    brand_name: 'Renovación de Placas CA',
+    brand_sub: 'Socio Autorizado del DMV',
+    hero_title: 'Renueve su Registro Vehicular de California en Línea',
+    hero_sub: 'Rápido, seguro y oficial. Sin filas en el DMV.',
+    badge_official: 'Socio Autorizado del DMV',
+    badge_secure: 'Seguro SSL 256 bits',
+    badge_instant: 'Consulta de Tarifas Instantánea',
+    step1: 'Vehículo', step2: 'Tarifas', step3: 'Pago', step4: 'Listo',
+    s1_title: 'Ingrese la Información del Vehículo',
+    label_plate: 'Número de Placa',
+    label_vin: 'Últimos 5 del VIN',
+    hint_vin: 'Se encuentra en su tarjeta de registro o tablero',
+    label_county: 'Condado',
+    select_county: '-- Seleccione Condado --',
+    label_email: 'Correo electrónico (para recibo)',
+    hint_email: 'Le enviaremos la confirmación y un recordatorio el próximo año',
+    btn_lookup: '🔍 Consultar Mis Tarifas de Registro',
+    s2_title: 'Resumen de Tarifas de Registro',
+    due_banner: 'Vencimiento:',
+    btn_back: '← Atrás',
+    btn_pay: 'Proceder al Pago →',
+    s3_title: 'Pago Seguro',
+    pay_total: 'Total a pagar:',
+    label_card: 'Datos de la Tarjeta',
+    btn_pay_now: '🔒 Pagar y Renovar Ahora',
+    secure_note: 'Pagos procesados de forma segura por Stripe. Nunca almacenamos los datos de su tarjeta.',
+    confirm_title: '¡Registro Renovado!',
+    confirm_sub: 'Su renovación ha sido procesada. Un correo de confirmación está en camino.',
+    share_title: 'Compartir o Recibir Notificaciones vía',
+    btn_wechat: 'Compartir por WeChat',
+    btn_messenger: 'Compartir por Messenger',
+    btn_new: 'Renovar Otro Vehículo',
+    wechat_modal_title: 'Compartir por WeChat',
+    wechat_modal_sub: 'Escanee el código QR con WeChat o toque "Abrir WeChat" en móvil.',
+    open_wechat: 'Abrir App WeChat',
+    footer_disclaimer: 'Este servicio es operado por un socio autorizado del DMV de California. No estamos afiliados con el Departamento de Vehículos Motorizados de California.',
+    footer_privacy: 'Política de Privacidad',
+    footer_terms: 'Términos de Servicio',
+    footer_contact: 'Contáctenos',
+    err_plate: 'Por favor ingrese el número de placa.',
+    err_vin: 'Por favor ingrese los últimos 5 dígitos del VIN.',
+    err_county: 'Por favor seleccione su condado.',
+    err_email: 'Por favor ingrese un correo electrónico válido.',
+    err_lookup: 'No se pudo consultar el vehículo. Verifique su placa y VIN.',
+    fee_registration: 'Tarifa de Registro',
+    fee_vlf: 'Tarifa de Licencia Vehicular (VLF)',
+    fee_county: 'Tarifa del Condado',
+    fee_smog: 'Tarifa de Reducción de Smog',
+    fee_service: 'Tarifa de Servicio',
+    fee_total: 'TOTAL A PAGAR',
+    confirm_plate: 'Número de Placa',
+    confirm_vehicle: 'Vehículo',
+    confirm_paid: 'Monto Pagado',
+    confirm_expiry: 'Nueva Vigencia',
+    confirm_ref: 'Referencia #',
+  },
+  zh: {
+    brand_name: '加州车牌更新',
+    brand_sub: '授权DMV合作伙伴',
+    hero_title: '在线更新您的加州车辆登记',
+    hero_sub: '快速、安全、官方认证。无需排队等候。',
+    badge_official: 'DMV授权合作伙伴',
+    badge_secure: '256位SSL加密',
+    badge_instant: '即时费用查询',
+    step1: '车辆', step2: '费用', step3: '付款', step4: '完成',
+    s1_title: '输入车辆信息',
+    label_plate: '车牌号',
+    label_vin: 'VIN后5位',
+    hint_vin: '可在您的车辆登记证或仪表板上找到',
+    label_county: '县/郡',
+    select_county: '-- 请选择县 --',
+    label_email: '电子邮件（用于收据）',
+    hint_email: '我们将发送确认邮件并在明年提醒您续期',
+    btn_lookup: '🔍 查询我的登记费用',
+    s2_title: '登记费用明细',
+    due_banner: '续期截止日期：',
+    btn_back: '← 返回',
+    btn_pay: '前往付款 →',
+    s3_title: '安全付款',
+    pay_total: '应付总额：',
+    label_card: '卡片信息',
+    btn_pay_now: '🔒 立即付款并续期',
+    secure_note: '付款由Stripe安全处理，我们不会存储您的卡片信息。',
+    confirm_title: '登记续期成功！',
+    confirm_sub: '您的续期已处理完成，确认邮件即将发送至您的邮箱。',
+    share_title: '通过以下方式分享或接收通知',
+    btn_wechat: '通过微信分享',
+    btn_messenger: '通过Messenger分享',
+    btn_new: '续期另一辆车',
+    wechat_modal_title: '通过微信分享',
+    wechat_modal_sub: '使用微信扫描二维码，或在手机上点击"打开微信"。',
+    open_wechat: '打开微信应用',
+    footer_disclaimer: '本服务由加州DMV授权合作伙伴运营，与加州机动车辆管理局无关联。',
+    footer_privacy: '隐私政策',
+    footer_terms: '服务条款',
+    footer_contact: '联系我们',
+    err_plate: '请输入车牌号。',
+    err_vin: '请输入VIN后5位数字。',
+    err_county: '请选择您所在的县。',
+    err_email: '请输入有效的电子邮件地址。',
+    err_lookup: '无法查询车辆信息，请检查您的车牌和VIN后重试。',
+    fee_registration: '登记费',
+    fee_vlf: '车辆许可费（VLF）',
+    fee_county: '县费',
+    fee_smog: '排放减免费',
+    fee_service: '服务费',
+    fee_total: '应付总额',
+    confirm_plate: '车牌号',
+    confirm_vehicle: '车辆',
+    confirm_paid: '已付金额',
+    confirm_expiry: '新到期日',
+    confirm_ref: '参考编号 #',
+  }
+};
+
+// ── State ─────────────────────────────────────────────
+let currentLang = 'en';
+let currentStep = 1;
+let vehicleData  = null;
+let stripe       = null;
+let cardElement  = null;
+
+// ── Language ──────────────────────────────────────────
+function setLang(lang) {
+  currentLang = lang;
+  document.querySelectorAll('.lang-btn').forEach((b, i) => {
+    b.classList.toggle('active', ['en','es','zh'][i] === lang);
+  });
+  const t = LANG[lang];
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (t[key] !== undefined) el.textContent = t[key];
+  });
+  // Update placeholders
+  document.getElementById('plate').placeholder = lang === 'zh' ? '例如 7ABC123' : lang === 'es' ? 'ej. 7ABC123' : 'e.g. 7ABC123';
+  document.getElementById('vin5').placeholder  = lang === 'zh' ? '例如 A1234'   : lang === 'es' ? 'ej. A1234'   : 'e.g. A1234';
+  document.getElementById('email').placeholder = lang === 'zh' ? '您的@邮箱.com' : lang === 'es' ? 'tu@correo.com' : 'your@email.com';
+  document.documentElement.lang = lang === 'zh' ? 'zh-CN' : lang;
+}
+
+// ── Step navigation ───────────────────────────────────
+function goStep(n) {
+  currentStep = n;
+  document.querySelectorAll('.section').forEach((s, i) => s.classList.toggle('active', i + 1 === n));
+  ['step1','step2','step3','step4'].forEach((id, i) => {
+    const el = document.getElementById(id + '-indicator');
+    el.classList.remove('active', 'done');
+    if (i + 1 < n) el.classList.add('done');
+    if (i + 1 === n) el.classList.add('active');
+  });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function goBack() { if (currentStep > 1) goStep(currentStep - 1); }
+
+// ── Stripe init ────────────────────────────────────────
+function initStripe() {
+  if (stripe) return;
+  try {
+    stripe = Stripe(CONFIG.stripePublicKey);
+    const elements = stripe.elements();
+    cardElement = elements.create('card', {
+      style: {
+        base: { fontFamily: 'Segoe UI, system-ui, sans-serif', fontSize: '16px', color: '#1c2333', '::placeholder': { color: '#b0bad0' } },
+        invalid: { color: '#d0021b' }
+      }
+    });
+    cardElement.mount('#card-element');
+    cardElement.on('change', ({ error }) => {
+      document.getElementById('card-errors').textContent = error ? error.message : '';
+    });
+  } catch (e) {
+    console.warn('Stripe init failed — check public key', e);
+  }
+}
+
+// ── Validation ────────────────────────────────────────
+function validate() {
+  const t = LANG[currentLang];
+  const plate  = document.getElementById('plate').value.trim();
+  const vin5   = document.getElementById('vin5').value.trim();
+  const county = document.getElementById('county').value;
+  const email  = document.getElementById('email').value.trim();
+  const errEl  = document.getElementById('lookup-error');
+
+  const showErr = msg => { errEl.textContent = msg; errEl.style.display = 'block'; };
+  errEl.style.display = 'none';
+
+  if (!plate)              { showErr(t.err_plate);  return false; }
+  if (vin5.length < 5)     { showErr(t.err_vin);    return false; }
+  if (!county)             { showErr(t.err_county);  return false; }
+  if (!/\S+@\S+\.\S+/.test(email)) { showErr(t.err_email); return false; }
+  return true;
+}
+
+// ── DMV Lookup ────────────────────────────────────────
+async function lookupVehicle() {
+  if (!validate()) return;
+
+  const btn  = document.getElementById('lookup-btn');
+  const t    = LANG[currentLang];
+  btn.innerHTML = '<div class="spinner"></div>';
+  btn.disabled  = true;
+
+  const plate  = document.getElementById('plate').value.trim().toUpperCase();
+  const vin5   = document.getElementById('vin5').value.trim().toUpperCase();
+  const county = document.getElementById('county').value;
+  const email  = document.getElementById('email').value.trim();
+
+  try {
+    // ── Call your backend DMV proxy ──────────────────
+    const res  = await fetch(`${CONFIG.apiBase}/dmv/lookup`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ plate, vin5, county, email })
+    });
+
+    if (!res.ok) throw new Error('lookup_failed');
+    vehicleData = await res.json();
+
+  } catch (_) {
+    // ── DEMO FALLBACK (remove when backend is live) ──
+    vehicleData = buildDemoVehicle(plate, vin5, county, email);
+  }
+
+  renderFees(vehicleData, t);
+  goStep(2);
+  initStripe();
+
+  btn.innerHTML = `<span data-i18n="btn_lookup">${t.btn_lookup}</span>`;
+  btn.disabled  = false;
+}
+
+function buildDemoVehicle(plate, vin5, county, email) {
+  // Demo data — replace with real DMV API response
+  const reg   = 147.00;
+  const vlf   = 94.00;
+  const cty   = 22.00;
+  const smog  = 20.00;
+  const total = reg + vlf + cty + smog + CONFIG.serviceFee;
+  return {
+    plate, vin5, county, email,
+    year:  '2020', make: 'Toyota', model: 'Camry',
+    dueDate: '08/2026',
+    fees: {
+      registration: reg,
+      vlf:          vlf,
+      county:       cty,
+      smog:         smog,
+      service:      CONFIG.serviceFee,
+      total:        total
+    }
+  };
+}
+
+function renderFees(data, t) {
+  document.getElementById('vehicle-name').textContent         = `${data.year} ${data.make} ${data.model}`;
+  document.getElementById('vehicle-plate-display').textContent = `${t.confirm_plate}: ${data.plate}`;
+  document.getElementById('due-date-display').textContent      = data.dueDate;
+  document.getElementById('pay-total-display').textContent     = `$${data.fees.total.toFixed(2)}`;
+
+  const rows = [
+    [t.fee_registration, data.fees.registration],
+    [t.fee_vlf,          data.fees.vlf],
+    [t.fee_county,       data.fees.county],
+    [t.fee_smog,         data.fees.smog],
+    [t.fee_service,      data.fees.service],
+  ];
+
+  const tbody = rows.map(([label, amt]) =>
+    `<tr><td>${label}</td><td>$${amt.toFixed(2)}</td></tr>`
+  ).join('') + `<tr class="total-row"><td>${t.fee_total}</td><td>$${data.fees.total.toFixed(2)}</td></tr>`;
+
+  document.getElementById('fee-table').innerHTML = tbody;
+}
+
+function goToPayment() { goStep(3); }
+
+// ── Payment ────────────────────────────────────────────
+async function submitPayment() {
+  if (!vehicleData) return;
+  const btn     = document.getElementById('pay-btn');
+  const btnText = document.getElementById('pay-btn-text');
+  const errEl   = document.getElementById('pay-error');
+  const t       = LANG[currentLang];
+
+  errEl.style.display = 'none';
+  btn.disabled  = true;
+  btnText.innerHTML = '<div class="spinner"></div>';
+
+  try {
+    // 1. Create PaymentIntent on your backend
+    const intentRes = await fetch(`${CONFIG.apiBase}/payment/intent`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({
+        amount: Math.round(vehicleData.fees.total * 100), // cents
+        plate:  vehicleData.plate,
+        email:  vehicleData.email
+      })
+    });
+
+    let clientSecret;
+    if (intentRes.ok) {
+      const intentData = await intentRes.json();
+      clientSecret = intentData.clientSecret;
+    } else {
+      // Demo mode: skip real payment
+      await new Promise(r => setTimeout(r, 1200));
+      showConfirmation();
+      return;
+    }
+
+    // 2. Confirm card payment
+    const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+      payment_method: { card: cardElement, billing_details: { email: vehicleData.email } }
+    });
+
+    if (error) throw new Error(error.message);
+
+    // 3. Notify backend to record renewal + send messages
+    await fetch(`${CONFIG.apiBase}/renewal/confirm`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ paymentIntentId: paymentIntent.id, plate: vehicleData.plate, email: vehicleData.email })
+    });
+
+    showConfirmation();
+
+  } catch (err) {
+    errEl.textContent    = err.message || 'Payment failed. Please try again.';
+    errEl.style.display  = 'block';
+    btn.disabled         = false;
+    btnText.innerHTML    = `<span data-i18n="btn_pay_now">${t.btn_pay_now}</span>`;
+  }
+}
+
+function showConfirmation() {
+  const t    = LANG[currentLang];
+  const data = vehicleData;
+  const ref  = 'CA-' + Date.now().toString(36).toUpperCase();
+  const expiry = data.dueDate.replace('2026','2027');
+
+  document.getElementById('confirm-details').innerHTML = `
+    <div class="row-detail"><span>${t.confirm_plate}</span><span>${data.plate}</span></div>
+    <div class="row-detail"><span>${t.confirm_vehicle}</span><span>${data.year} ${data.make} ${data.model}</span></div>
+    <div class="row-detail"><span>${t.confirm_paid}</span><span>$${data.fees.total.toFixed(2)}</span></div>
+    <div class="row-detail"><span>${t.confirm_expiry}</span><span>${expiry}</span></div>
+    <div class="row-detail"><span>${t.confirm_ref}</span><span>${ref}</span></div>
+  `;
+  goStep(4);
+}
+
+// ── Messaging ──────────────────────────────────────────
+function shareWeChat() {
+  // On mobile WeChat browser: use wx.ready() share API
+  // On desktop: show QR modal pointing to your WeChat Official Account
+  const isMobile = /Mobi|Android|iPhone/i.test(navigator.userAgent);
+  const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
+
+  if (isWeChat) {
+    // Running inside WeChat — call JSSDK share
+    if (window.wx) {
+      wx.ready(() => {
+        wx.updateAppMessageShareData({
+          title:  document.querySelector('[data-i18n="confirm_title"]').textContent,
+          desc:   `${vehicleData.plate} — $${vehicleData.fees.total.toFixed(2)}`,
+          link:   window.location.href,
+          imgUrl: window.location.origin + '/logo.png',
+          success: () => {}
+        });
+      });
+    }
+  } else if (isMobile) {
+    // Deep-link into WeChat app
+    window.location.href = `weixin://`;
+  } else {
+    // Desktop: show QR code modal
+    document.getElementById('wechat-overlay').classList.add('open');
+  }
+}
+
+function closeWeChat(e) {
+  if (e.target === document.getElementById('wechat-overlay')) {
+    document.getElementById('wechat-overlay').classList.remove('open');
+  }
+}
+
+function openWeChatApp() {
+  window.location.href = `weixin://`;
+}
+
+function shareMessenger() {
+  const url  = encodeURIComponent(window.location.href);
+  const text = vehicleData
+    ? encodeURIComponent(`I just renewed my CA registration for ${vehicleData.plate} — quick and easy!`)
+    : '';
+
+  // Facebook Messenger share
+  if (CONFIG.facebookAppId && CONFIG.facebookAppId !== 'YOUR_FB_APP_ID') {
+    const shareUrl = `https://www.facebook.com/dialog/send?app_id=${CONFIG.facebookAppId}&link=${url}&redirect_uri=${url}`;
+    window.open(shareUrl, '_blank', 'width=580,height=400');
+  } else {
+    // Fallback: open Messenger app on mobile
+    const isMobile = /Mobi|Android|iPhone/i.test(navigator.userAgent);
+    if (isMobile) {
+      window.location.href = `fb-messenger://share/?link=${url}`;
+    } else {
+      window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank', 'width=580,height=400');
+    }
+  }
+}
+
+function startOver() {
+  vehicleData = null;
+  document.getElementById('plate').value  = '';
+  document.getElementById('vin5').value   = '';
+  document.getElementById('county').value = '';
+  document.getElementById('email').value  = '';
+  goStep(1);
+}
+
+// ── Init ───────────────────────────────────────────────
+setLang('en');
+</script>
+</body>
+</html>

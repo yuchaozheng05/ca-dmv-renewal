@@ -1,0 +1,40 @@
+services:
+  - type: web
+    name: ca-dmv-renewal
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: DMV_API_URL
+        sync: false
+      - key: DMV_PARTNER_CODE
+        sync: false
+      - key: DMV_API_TOKEN
+        sync: false
+      - key: SERVICE_FEE
+        value: "15.00"
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: WECHAT_APP_ID
+        sync: false
+      - key: WECHAT_APP_SECRET
+        sync: false
+      - key: WECHAT_TOKEN
+        sync: false
+      - key: WECHAT_TEMPLATE_ID
+        sync: false
+      - key: FACEBOOK_APP_ID
+        sync: false
