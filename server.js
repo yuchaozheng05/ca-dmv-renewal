@@ -21,8 +21,10 @@ const cors        = require('cors');
 const path        = require('path');
 require('dotenv').config();
 
-const app    = express();
-const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+const app = express();
+const stripe = process.env.STRIPE_SECRET_KEY
+  ? Stripe(process.env.STRIPE_SECRET_KEY)
+  : null;
 
 // ── Middleware ────────────────────────────────────────
 app.use(cors());
@@ -42,6 +44,13 @@ app.post('/api/dmv/lookup', async (req, res) => {
 
   if (!plate || !vin5 || vin5.length !== 5) {
     return res.status(400).json({ error: 'Missing or invalid plate/VIN' });
+  }
+
+  if (!process.env.DMV_API_URL || !process.env.DMV_API_TOKEN || !process.env.DMV_PARTNER_CODE) {
+    return res.status(503).json({
+      error: 'DMV partner API is not configured',
+      code: 'DMV_NOT_CONFIGURED'
+    });
   }
 
   try {
@@ -115,6 +124,13 @@ app.post('/api/payment/intent', async (req, res) => {
     return res.status(400).json({ error: 'Invalid amount' });
   }
 
+  if (!stripe) {
+    return res.status(503).json({
+      error: 'Stripe is not configured',
+      code: 'STRIPE_NOT_CONFIGURED'
+    });
+  }
+
   try {
     const intent = await stripe.paymentIntents.create({
       amount:   amount,             // in cents
@@ -142,6 +158,13 @@ app.post('/api/renewal/confirm', async (req, res) => {
   const { paymentIntentId, plate, email } = req.body;
 
   try {
+    if (!stripe) {
+      return res.status(503).json({
+        error: 'Stripe is not configured',
+        code: 'STRIPE_NOT_CONFIGURED'
+      });
+    }
+
     // ── a) Verify payment with Stripe ────────────────
     const intent = await stripe.paymentIntents.retrieve(paymentIntentId);
     if (intent.status !== 'succeeded') {
@@ -172,6 +195,10 @@ app.post('/api/renewal/confirm', async (req, res) => {
 //  4. STRIPE WEBHOOK — Handle async events
 // ══════════════════════════════════════════════════════
 app.post('/api/webhook/stripe', (req, res) => {
+  if (!stripe || !process.env.STRIPE_WEBHOOK_SECRET) {
+    return res.status(503).send('Stripe webhook is not configured');
+  }
+
   const sig = req.headers['stripe-signature'];
   let event;
 
@@ -249,22 +276,22 @@ async function sendConfirmationEmail(to, plate, amount, refNum) {
   await transporter.sendMail({
     from:    `"CA Reg Renewal" <${process.env.SMTP_USER}>`,
     to,
-    subject: `✅ Registration Renewed — ${plate}`,
+    subject: `Registration Renewal Request Received - ${plate}`,
     html: `
       <div style="font-family:sans-serif;max-width:520px;margin:0 auto">
         <div style="background:#1a4fa0;color:#fff;padding:24px;border-radius:8px 8px 0 0">
-          <h1 style="margin:0;font-size:22px">Registration Renewed ✓</h1>
+          <h1 style="margin:0;font-size:22px">Renewal Request Received</h1>
         </div>
         <div style="background:#f4f6fb;padding:24px;border-radius:0 0 8px 8px">
-          <p>Your California vehicle registration for plate <strong>${plate}</strong> has been successfully renewed.</p>
+          <p>Your California vehicle registration renewal request for plate <strong>${plate}</strong> has been received for processing.</p>
           <table style="width:100%;border-collapse:collapse;margin:16px 0">
             <tr><td style="padding:8px 0;border-bottom:1px solid #ddd">Reference #</td><td style="font-weight:bold;text-align:right">${refNum}</td></tr>
             <tr><td style="padding:8px 0;border-bottom:1px solid #ddd">Plate</td><td style="font-weight:bold;text-align:right">${plate}</td></tr>
             <tr><td style="padding:8px 0">Amount Paid</td><td style="font-weight:bold;text-align:right">$${amount}</td></tr>
           </table>
-          <p style="font-size:13px;color:#666">Your registration sticker will arrive by mail within 5–7 business days. A digital copy has been submitted to the CA DMV.</p>
+          <p style="font-size:13px;color:#666">We will send another update when the DMV submission is complete and fulfillment details are available.</p>
           <hr style="border:none;border-top:1px solid #ddd;margin:20px 0"/>
-          <p style="font-size:12px;color:#999">This service is operated by an authorized CA DMV Business Partner. Not affiliated with the CA DMV.</p>
+          <p style="font-size:12px;color:#999">This service is not the California DMV website. Official DMV services may also be available directly through dmv.ca.gov.</p>
         </div>
       </div>
     `
