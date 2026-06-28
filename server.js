@@ -21,12 +21,48 @@ const cors        = require('cors');
 const path        = require('path');
 require('dotenv').config();
 
+// ── Simple in-memory rate limiter ────────────────────
+const rateLimitMap = new Map();
+function rateLimit(windowMs, maxRequests) {
+  return (req, res, next) => {
+    const key = req.ip || req.connection.remoteAddress || 'unknown';
+    const now = Date.now();
+    const entry = rateLimitMap.get(key) || { count: 0, resetAt: now + windowMs };
+    if (now > entry.resetAt) { entry.count = 0; entry.resetAt = now + windowMs; }
+    entry.count++;
+    rateLimitMap.set(key, entry);
+    if (entry.count > maxRequests) {
+      return res.status(429).json({ error: 'Too many requests. Please try again later.' });
+    }
+    next();
+  };
+}
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of rateLimitMap) {
+    if (now > entry.resetAt) rateLimitMap.delete(key);
+  }
+}, 10 * 60 * 1000);
+
+// ── Input helpers ─────────────────────────────────────
+const sanitizePlate = (v) => (typeof v === 'string' ? v.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8) : '');
+const sanitizeVin5  = (v) => (typeof v === 'string' ? v.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5) : '');
+const sanitizeEmail = (v) => (typeof v === 'string' ? v.trim().toLowerCase().slice(0, 254) : '');
+const isValidEmail  = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
+
 const app = express();
 const stripe = process.env.STRIPE_SECRET_KEY
   ? Stripe(process.env.STRIPE_SECRET_KEY)
   : null;
 
 // ── Middleware ────────────────────────────────────────
+// Basic security headers (no external dependency needed)
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+});
 app.use(cors());
 // Raw body needed for Stripe webhook signature verification
 app.use('/api/webhook/stripe', bodyParser.raw({ type: 'application/json' }));
@@ -39,11 +75,23 @@ app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 // ══════════════════════════════════════════════════════
 //  1. DMV VEHICLE LOOKUP
 // ══════════════════════════════════════════════════════
-app.post('/api/dmv/lookup', async (req, res) => {
-  const { plate, vin5, county, email } = req.body;
+app.post('/api/dmv/lookup', rateLimit(60_000, 10), async (req, res) => {
+  const plate  = sanitizePlate(req.body.plate);
+  const vin5   = sanitizeVin5(req.body.vin5);
+  const county = typeof req.body.county === 'string' ? req.body.county.slice(0, 50) : '';
+  const email  = sanitizeEmail(req.body.email);
 
-  if (!plate || !vin5 || vin5.length !== 5) {
-    return res.status(400).json({ error: 'Missing or invalid plate/VIN' });
+  if (!plate || plate.length > 8) {
+    return res.status(400).json({ error: 'Missing or invalid plate number' });
+  }
+  if (vin5.length !== 5) {
+    return res.status(400).json({ error: 'VIN/HIN last 5 must be exactly 5 characters' });
+  }
+  if (!county) {
+    return res.status(400).json({ error: 'County is required' });
+  }
+  if (email && !isValidEmail(email)) {
+    return res.status(400).json({ error: 'Invalid email address' });
   }
 
   if (!process.env.DMV_API_URL || !process.env.DMV_API_TOKEN || !process.env.DMV_PARTNER_CODE) {
@@ -117,10 +165,12 @@ app.post('/api/dmv/lookup', async (req, res) => {
 // ══════════════════════════════════════════════════════
 //  2. STRIPE — Create PaymentIntent
 // ══════════════════════════════════════════════════════
-app.post('/api/payment/intent', async (req, res) => {
-  const { amount, plate, email } = req.body;
+app.post('/api/payment/intent', rateLimit(60_000, 5), async (req, res) => {
+  const amount = Number(req.body.amount);
+  const plate  = sanitizePlate(req.body.plate);
+  const email  = sanitizeEmail(req.body.email);
 
-  if (!amount || amount < 100) {
+  if (!Number.isInteger(amount) || amount < 100 || amount > 10_000_00) {
     return res.status(400).json({ error: 'Invalid amount' });
   }
 
@@ -154,8 +204,10 @@ app.post('/api/payment/intent', async (req, res) => {
 // ══════════════════════════════════════════════════════
 //  3. RENEWAL CONFIRM — Record + Send Notifications
 // ══════════════════════════════════════════════════════
-app.post('/api/renewal/confirm', async (req, res) => {
-  const { paymentIntentId, plate, email } = req.body;
+app.post('/api/renewal/confirm', rateLimit(60_000, 5), async (req, res) => {
+  const paymentIntentId = typeof req.body.paymentIntentId === 'string' ? req.body.paymentIntentId.slice(0, 64) : '';
+  const plate = sanitizePlate(req.body.plate);
+  const email = sanitizeEmail(req.body.email);
 
   try {
     if (!stripe) {
